@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // Cursor
 const cursor = {
@@ -6,8 +7,9 @@ const cursor = {
   y: 0,
 };
 window.addEventListener("mousemove", (e) => {
-  cursor.x = e.clientX;
-  cursor.y = e.clientY;
+  cursor.x = e.clientX / sizes.width - 0.5;
+  cursor.y = -(e.clientY / sizes.height - 0.5);
+  console.log(`${cursor.x}, ${cursor.y}`);
 });
 
 /**
@@ -49,6 +51,10 @@ camera.position.z = 2;
 camera.lookAt(mesh.position);
 scene.add(camera);
 
+// Controls
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+
 // Renderer
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
@@ -62,10 +68,16 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
 
   // Update objects
-  //   mesh.rotation.y = elapsedTime;
+  // camera.position.x = Math.sin(cursor.x * Math.PI * 2) * 2;
+  // camera.position.z = Math.cos(cursor.x * Math.PI * 2) * 2;
+  // camera.position.y = cursor.y * 2;
+  // camera.lookAt(mesh.position);
 
   // Render
   renderer.render(scene, camera);
+
+  // Update Controls
+  controls.update();
 
   // Call tick again on the next frame
   window.requestAnimationFrame(tick);
