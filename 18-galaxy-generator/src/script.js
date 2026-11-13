@@ -22,6 +22,11 @@ const parameters = {
   size: 0.01,
   radius: 5,
   branches: 3,
+  spin: 1,
+  randomness: 0.2,
+  randomnessPower: 2,
+  insideColor: "#ff6030",
+  outsideColor: "#1b3984",
 };
 
 let particlesGeometry = null;
@@ -43,20 +48,49 @@ const generateGalaxy = () => {
    */
   particlesGeometry = new THREE.BufferGeometry();
   const particlesPositions = new Float32Array(parameters.count * 3);
+  const particlesColors = new Float32Array(parameters.count * 3);
+  const insideColor = new THREE.Color(parameters.insideColor);
+  const outsideColor = new THREE.Color(parameters.outsideColor);
 
   for (let i = 0; i < parameters.count; i++) {
     const i3 = i * 3;
+
+    // Position
     const radius = Math.random() * parameters.radius;
+    const spinAngle = radius * parameters.spin;
     const branchAngle =
       ((i % parameters.branches) / parameters.branches) * Math.PI * 2;
+    const randomX =
+      Math.pow(Math.random(), parameters.randomnessPower) *
+      (Math.random() < 0.5 ? 1 : -1);
+    const randomY =
+      Math.pow(Math.random(), parameters.randomnessPower) *
+      (Math.random() < 0.5 ? 1 : -1);
+    const randomZ =
+      Math.pow(Math.random(), parameters.randomnessPower) *
+      (Math.random() < 0.5 ? 1 : -1);
 
-    particlesPositions[i3 + 0] = Math.cos(branchAngle) * radius;
-    particlesPositions[i3 + 1] = 0;
-    particlesPositions[i3 + 2] = Math.sin(branchAngle) * radius;
+    particlesPositions[i3 + 0] =
+      Math.cos(branchAngle + spinAngle) * radius + randomX;
+    particlesPositions[i3 + 1] = randomY;
+    particlesPositions[i3 + 2] =
+      Math.sin(branchAngle + spinAngle) * radius + randomZ;
+
+    // Color
+    const mixedColor = insideColor.clone();
+    mixedColor.lerp(outsideColor, radius / parameters.radius);
+    particlesColors[i3 + 0] = mixedColor.r;
+    particlesColors[i3 + 1] = mixedColor.g;
+    particlesColors[i3 + 2] = mixedColor.b;
   }
+
   particlesGeometry.setAttribute(
     "position",
     new THREE.BufferAttribute(particlesPositions, 3),
+  );
+  particlesGeometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(particlesColors, 3),
   );
 
   /**
@@ -68,6 +102,7 @@ const generateGalaxy = () => {
     sizeAttenuation: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
+    vertexColors: true,
   });
 
   /**
@@ -107,6 +142,26 @@ gui
   .max(20)
   .step(1)
   .onFinishChange(generateGalaxy);
+gui
+  .add(parameters, "spin")
+  .min(-5)
+  .max(5)
+  .step(0.001)
+  .onFinishChange(generateGalaxy);
+gui
+  .add(parameters, "randomness")
+  .min(0)
+  .max(2)
+  .step(0.001)
+  .onFinishChange(generateGalaxy);
+gui
+  .add(parameters, "randomnessPower")
+  .min(1)
+  .max(10)
+  .step(1)
+  .onFinishChange(generateGalaxy);
+gui.addColor(parameters, "insideColor").onFinishChange(generateGalaxy);
+gui.addColor(parameters, "outsideColor").onFinishChange(generateGalaxy);
 
 /**
  * Sizes
